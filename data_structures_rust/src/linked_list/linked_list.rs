@@ -9,21 +9,21 @@ impl<T> Node<T> {
     }
 }
 
-struct LinkedList<T> {
+pub struct LinkedList<T> {
     head: Option<Box<Node<T>>>,
 }
 
 impl<T> LinkedList<T> {
-    fn new() -> LinkedList<T> {
+    pub fn new() -> LinkedList<T> {
         LinkedList { head: None }
     }
 
-    fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.head.is_none()
     }
 
-    fn push(&mut self, data: T) {
-        let new_node = Box::new(Node::new(data));
+    pub fn push(&mut self, data: T) {
+        let mut new_node = Box::new(Node::new(data));
         match self.head.take() {
             None => self.head = Some(new_node),
             Some(head) => {
@@ -33,10 +33,10 @@ impl<T> LinkedList<T> {
         }
     }
 
-    fn pop(&mut self) -> Option<T> {
-        self.head.take().map(|head| {
-            self.head = head.next;
-            head.data
+    pub fn pop(&mut self) -> Option<T> {
+        self.head.take().map(|current_node| {
+            self.head = current_node.next;
+            current_node.data
         })
     }
 }

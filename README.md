@@ -11,6 +11,7 @@ You will find excercises like the nexts:
 - problems with graphs
 - calculate something using C or Rust, etc
 - some solutions to problems in the book Cracking the coding interview
+- [compression tool ](compression_tool)
 
 Cambiamos la palabra 'and' por 'DNA' en el título 'Algorithms and Data Structures'. ¿Por qué? Porque queríamos destacar que la algoritmia es como el ADN de la informática: esencial, fundamental y determinante para el funcionamiento y la evolución de los sistemas y aplicaciones informáticas
 

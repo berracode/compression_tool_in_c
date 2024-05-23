@@ -15,7 +15,7 @@ PriorityQueue *create_priority_queue() {
 
 void print_huffnode(HuffNode *node) {
     if (node != NULL && node->data != NULL) {
-        printf("Element: %c, Weight: %d\n", node->data->element, node->data->weight);
+        printf("/////////// Element: %c, Weight: %d\n", node->data->element, node->data->weight);
     }
 }
 
@@ -45,23 +45,27 @@ HuffNode* new_node(char element, int weight){
 void insert_node(PriorityQueue *queue, char element, int weight) {
 
     HuffNode *newNode = new_node(element, weight);
+    //printf("newNode ");
+    //print_huffnode(newNode);
 
     if (is_empty(queue)) {
         queue->head = newNode;
     } else {
         HuffNode *current = queue->head;
         HuffNode *previous = NULL;
-        while (current && current->data->weight <= newNode->data->weight) {
+        //printf("current inser ");
+        //print_huffnode(current);
+        while (current && current->data->weight < newNode->data->weight) {
             previous = current;
             current = current->next;
         }
 
-        if (!previous) {
+        if (previous == NULL) {
             newNode->next = queue->head;
             queue->head = newNode;
         } else {
-            newNode->next = previous->next;
             previous->next = newNode;
+            newNode->next = current;
         }
 
     }
@@ -70,6 +74,7 @@ void insert_node(PriorityQueue *queue, char element, int weight) {
 }
 
 void remove_top_node(PriorityQueue *queue, HuffNode **topNode) {
+    //printf("q size %d\n", queue->size);
     if (is_empty(queue)) {
         return;
     }
@@ -77,6 +82,16 @@ void remove_top_node(PriorityQueue *queue, HuffNode **topNode) {
     queue->head = queue->head->next;
     queue->size--;
 
+}
+
+void delete_node(PriorityQueue *queue, HuffNode **previous, HuffNode **current){
+    if (current && (*current)->next){
+        (*previous)->next = (*current)->next;
+    } else {
+        (*previous)->next = NULL;
+    }
+    free(*current);
+    queue->size--;
 }
 
 void destroy_priority_queue(PriorityQueue *queue) {
@@ -87,4 +102,12 @@ void destroy_priority_queue(PriorityQueue *queue) {
         current = next;
     }
     free(queue);
+}
+
+void print_queue(PriorityQueue *queue) {
+    HuffNode *current = queue->head;
+    while (current != NULL) {
+        printf("# Element: %c, Weight: %d\n", current->data->element, current->data->weight);
+        current = current->next;
+    }
 }

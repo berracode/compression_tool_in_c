@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include "priority_queue.h"
+#include "ktmem.h"
 
 void help(char *argv){
     printf("\n");
@@ -56,14 +56,10 @@ char* get_utf8_string(const unsigned char *str, int *index) {
         length = 4; // 4 bytes
     }
 
-    char* utf8_char = (char*)malloc(length + 1);
-    if (utf8_char == NULL) {
-        fprintf(stderr, "Error: can't set memory\n");
-        exit(1);
-    }
-
+    char* utf8_char = (char*)ktmalloc(length + 1);
+    
     for (int i = 0; i < length; i++) {
-        printf("%c", str[*index + i]);
+        //printf("%c", str[*index + i]);
         utf8_char[i] = str[*index + i];
     }
     utf8_char[length] = '\0';
@@ -81,13 +77,8 @@ void read_file_with_buffer(const char *filename) {
         exit(EXIT_FAILURE);
     }
 
-    unsigned char *buffer = malloc(file_size);
+    unsigned char *buffer = ktmalloc(file_size);
     printf("buffer sizeof: %lu \n", sizeof(buffer));
-    if (buffer == NULL) {
-        perror("Can't set memory");
-        fclose(file);
-        exit(EXIT_FAILURE);
-    }
 
     size_t bytes_read;
     priority_queue_t *queue = create_priority_queue();
@@ -97,7 +88,7 @@ void read_file_with_buffer(const char *filename) {
         int i = 0;
         while (i < bytes_read) {
             //printf("char: %d %d\n", buffer[i], iscntrl(buffer[i]));
-            if(!iscntrl(buffer[i])) {
+            if(!(buffer[i] >= 0 && buffer[i] <=31) && buffer[i]!=0x7F) {
                 char *char_as_string = get_utf8_string(buffer, &i);
                 //printf("Char as string %s\n", char_as_string);
                 if(is_empty(queue)){
@@ -123,13 +114,13 @@ void read_file_with_buffer(const char *filename) {
                                 huff_node_t *topNode;
                                 remove_top_node(queue, &topNode);
                                 insert_node(queue, element, weight);
-                                free(topNode);
+                                ktfree(topNode);
 
                             } else {
                                 delete_node(queue, &previuos, &current);
                                 insert_node(queue, element, weight);
                             }
-                            free(char_as_string);
+                            ktfree(char_as_string);
 
                             break;
                         }
@@ -160,13 +151,13 @@ void read_file_with_buffer(const char *filename) {
         //printf("%c: %d\n", topNode->data->element, topNode->data->weight);
         //printf("aqui para: \n");
 
-        free(topNode);
+        ktfree(topNode);
     }
     printf("Destruccion\n");
 
     destroy_priority_queue(queue);
 
-    free(buffer);
+    ktfree(buffer);
     fclose(file);
 }
 

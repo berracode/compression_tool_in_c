@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "ktmem.h"
 #include "priority_queue.h"
 
 priority_queue_t *create_priority_queue() {
-    priority_queue_t *queue = malloc(sizeof(priority_queue_t));
+    priority_queue_t *queue = (priority_queue_t *)ktmalloc(sizeof(priority_queue_t));
     if (!queue) {
         return NULL;
     }
@@ -32,8 +34,8 @@ int is_empty(priority_queue_t *queue) {
  * @return HuffNode* 
  */
 huff_node_t* new_node(const char *element, int weight){
-    huff_node_t *temp = (huff_node_t*)malloc(sizeof(huff_node_t));
-    huff_data_t *data = (huff_data_t*)malloc(sizeof(huff_data_t));
+    huff_node_t *temp = (huff_node_t*)ktmalloc(sizeof(huff_node_t));
+    huff_data_t *data = (huff_data_t*)ktmalloc(sizeof(huff_data_t));
 
     data->element = element;
     data->weight = weight;
@@ -91,8 +93,8 @@ void delete_node(priority_queue_t *queue, huff_node_t **previous, huff_node_t **
     } else {
         (*previous)->next = NULL;
     }
-    free((*current)->data);
-    free(*current);
+    ktfree((*current)->data);
+    ktfree(*current);
     queue->size--;
 }
 
@@ -100,10 +102,10 @@ void destroy_priority_queue(priority_queue_t *queue) {
     huff_node_t *current = queue->head;
     while (current) {
         huff_node_t *next = current->next;
-        free(current);
+        ktfree(current);
         current = next;
     }
-    free(queue);
+    ktfree(queue);
 }
 
 void print_queue(priority_queue_t *queue) {

@@ -4,6 +4,8 @@
 #include "heap_priority_queue.h"
 #include "ktmem.h"
 
+binary_heap_pq_t *heap;
+
 void help(char *argv){
     printf("\n");
     printf("usage: %s <COMMAND> FILE_PATH\n\n", argv);
@@ -17,7 +19,6 @@ void help(char *argv){
     printf("    -v, --version   Print version\n");
 
 }
-
 
 long get_file_size(const char *filename) {
     FILE *file = fopen(filename, "rb");
@@ -81,8 +82,7 @@ void read_file_with_buffer(const char *filename) {
     printf("buffer sizeof: %lu \n", sizeof(buffer));
 
     size_t bytes_read;
-    binary_heap_pq_t *heap = create_binary_heap_pq();
-
+    heap = create_binary_heap_pq();
 
     while ((bytes_read = fread(buffer, 1, file_size, file)) > 0) {
         printf("Bytes readed: %ld\n", bytes_read);
@@ -144,6 +144,83 @@ void read_file_with_buffer(const char *filename) {
 
     print_heap(heap);
 
+    ktfree(buffer);
+    fclose(file);
+}
+
+void build_tree(){
+    // leer los dos primeros nodos y removerlos
+    // sumar los pesos
+    // crear un nuevo tree_nodo_t para el peso, y ponerlo a apuntar a los dos nodos leidos por left y right
+    // insertarlo en el heap nuevamente.
+    // repetir hasta que solo haya 1 nodo en el heap
+
+    heap_pq_node_t *first_temp;
+    heap_pq_node_t *second_temp;
+
+    printf("---------------inciia destrucción---------------------\n");
+    while (!is_empty(heap)&& heap->size > 1) {
+        remove_top_node(heap, &first_temp);
+        remove_top_node(heap, &second_temp);
+
+        //printf("aqui para: \n");
+        printf("first_temp: %s: %d\n", first_temp->tree_node->data->element, first_temp->tree_node->data->weight);
+        printf("second_temp: %s: %d\n", second_temp->tree_node->data->element, second_temp->tree_node->data->weight);
+        int weight = first_temp->tree_node->data->weight + second_temp->tree_node->data->weight;
+        heap_pq_node_t *root_node = create_new_node(NULL, weight);
+        print_heap_pq_node(root_node);
+
+        printf("aqui 1\n");
+        root_node->tree_node->left = first_temp->tree_node;
+                printf("aqui 2\n");
+
+        root_node->tree_node->right = second_temp->tree_node;
+                printf("aqui 3\n");
+
+        insert_heap_pq_node(heap, root_node);
+        print_heap(heap);
+        
+
+
+        //printf("aqui para: \n");
+
+        //ktfree(first_temp);
+        //ktfree(second_temp);
+
+    }
+
+    printf("hpq->size %d\n", heap->size);
+    if(!is_empty(heap)){
+        printf("addr: %p\n", heap->head->tree_node->data->element);
+        ktfree(heap->head->tree_node->data);
+        printf("addr 1.1: %p\n", heap->head->tree_node->data->element);
+
+        ktfree(heap->head->tree_node);
+        
+        printf("addr 2: %p\n", heap->head->tree_node);
+        ktfree(heap->head);
+        printf("addr 2.1: %p\n", heap->head->tree_node);
+
+        printf("addr 3.0 heap: %p\n", (heap->head));
+        printf("addr 3.1stack: %p\n", &heap->head);
+        ktfree(heap);
+        printf("addr 3.2 heap: %p\n", heap->head);
+        printf("addr 3.3 stack: %p\n", &heap->head);
+        printf("addr 4: %p\n", heap);
+
+
+
+        printf("destruye todo los nodos\n");
+    }
+
+
+}
+
+void compress_file(char *file_path){
+
+    read_file_with_buffer(file_path);
+    build_tree();
+    /*
     heap_pq_node_t *topNode;
     printf("---------------inciia destrucción---------------------\n");
     while (!is_empty(heap)) {
@@ -154,21 +231,15 @@ void read_file_with_buffer(const char *filename) {
 
         ktfree(topNode);
     }
+    */
     printf("Destruccion\n");
+    if (!is_empty(heap)){
+        destroy_heap_priority_queue(heap);
+    }
+    
 
-    destroy_heap_priority_queue(heap);
-
-    ktfree(buffer);
-    fclose(file);
-}
-
-void compress_file(char *file_path){
-
-    read_file_with_buffer(file_path);
 
 }
-
-
 
 int main(int argc, char *argv[]) {
 

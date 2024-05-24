@@ -71,13 +71,14 @@ typedef struct binary_heap_pq_t{
 binary_heap_pq_t* create_binary_heap_pq();
 int is_empty(binary_heap_pq_t *heap);
 
-
+heap_pq_node_t* create_new_node(const char *element, int weight);
 void insert_node(binary_heap_pq_t *heap, const char *element, int weight);
+void insert_heap_pq_node(binary_heap_pq_t *heap, heap_pq_node_t *new_node);
 void delete_node(binary_heap_pq_t *heap, heap_pq_node_t **previous, heap_pq_node_t **current);
 void remove_top_node(binary_heap_pq_t *heap, heap_pq_node_t **topNode);
 void destroy_heap_priority_queue(binary_heap_pq_t *heap);
 
-
+void print_heap_pq_node(heap_pq_node_t *node);
 void print_heap(binary_heap_pq_t *heap);
 
 

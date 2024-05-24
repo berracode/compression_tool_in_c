@@ -1,15 +1,15 @@
 #ifndef PRIORITY_QUEUE_H
 #define PRIORITY_QUEUE_H
 
-typedef struct HuffData {
+typedef struct huff_data_t {
     const char *element;
     int weight;
-} HuffData;
+} huff_data_t;
 
-typedef struct HuffNode {
-    struct HuffData *data;
-    struct HuffNode *next;
-} HuffNode;
+typedef struct huff_node_t {
+    struct huff_data_t *data;
+    struct huff_node_t *next;
+} huff_node_t;
 
 
 
@@ -36,21 +36,21 @@ typedef struct HuffNode {
 | size: ...
 +------------------+
 */
-typedef struct PriorityQueue {
-    HuffNode *head;
+typedef struct priority_queue_t {
+    huff_node_t *head;
     int size;
-} PriorityQueue;
+} priority_queue_t;
 
-PriorityQueue *create_priority_queue();
-int is_empty(PriorityQueue *queue);
+priority_queue_t *create_priority_queue();
+int is_empty(priority_queue_t *queue);
 
-void insert_node(PriorityQueue *queue, const char *element, int weight);
-void delete_node(PriorityQueue *queue, HuffNode **previous, HuffNode **current);
-void remove_top_node(PriorityQueue *queue, HuffNode **topNode);
-void destroy_priority_queue(PriorityQueue *queue);
+void insert_node(priority_queue_t *queue, const char *element, int weight);
+void delete_node(priority_queue_t *queue, huff_node_t **previous, huff_node_t **current);
+void remove_top_node(priority_queue_t *queue, huff_node_t **topNode);
+void destroy_priority_queue(priority_queue_t *queue);
 
-void print_huffnode(HuffNode *node);
-void print_queue(PriorityQueue *queue);
+void print_huffnode(huff_node_t *node);
+void print_queue(priority_queue_t *queue);
 
 
 

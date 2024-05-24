@@ -90,7 +90,7 @@ void read_file_with_buffer(const char *filename) {
     }
 
     size_t bytes_read;
-    PriorityQueue *queue = create_priority_queue();
+    priority_queue_t *queue = create_priority_queue();
 
     while ((bytes_read = fread(buffer, 1, file_size, file)) > 0) {
         printf("Bytes readed: %ld\n", bytes_read);
@@ -104,8 +104,8 @@ void read_file_with_buffer(const char *filename) {
                     insert_node(queue, char_as_string, 1);
                 } else {
 
-                    HuffNode *current = queue->head;
-                    HuffNode *previuos = NULL;
+                    huff_node_t *current = queue->head;
+                    huff_node_t *previuos = NULL;
 
                     short is_present = 0;
                     while (current && !is_present) {
@@ -120,7 +120,7 @@ void read_file_with_buffer(const char *filename) {
                             weight = weight + 1;
 
                             if(previuos == NULL) { //is the first node
-                                HuffNode *topNode;
+                                huff_node_t *topNode;
                                 remove_top_node(queue, &topNode);
                                 insert_node(queue, element, weight);
                                 free(topNode);
@@ -152,7 +152,7 @@ void read_file_with_buffer(const char *filename) {
 
     print_queue(queue);
 
-    HuffNode *topNode;
+    huff_node_t *topNode;
     printf("---------------inciia destrucción---------------------\n");
     while (!is_empty(queue)) {
         remove_top_node(queue, &topNode);

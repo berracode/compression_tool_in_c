@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "priority_queue.h"
+#include "heap_priority_queue.h"
 #include "ktmem.h"
 
 void help(char *argv){
@@ -81,7 +81,8 @@ void read_file_with_buffer(const char *filename) {
     printf("buffer sizeof: %lu \n", sizeof(buffer));
 
     size_t bytes_read;
-    priority_queue_t *queue = create_priority_queue();
+    binary_heap_pq_t *heap = create_binary_heap_pq();
+
 
     while ((bytes_read = fread(buffer, 1, file_size, file)) > 0) {
         printf("Bytes readed: %ld\n", bytes_read);
@@ -91,17 +92,17 @@ void read_file_with_buffer(const char *filename) {
             if(!(buffer[i] >= 0 && buffer[i] <=31) && buffer[i]!=0x7F) {
                 char *char_as_string = get_utf8_string(buffer, &i);
                 //printf("Char as string %s\n", char_as_string);
-                if(is_empty(queue)){
-                    insert_node(queue, char_as_string, 1);
+                if(is_empty(heap)){
+                    insert_node(heap, char_as_string, 1);
                 } else {
 
-                    huff_node_t *current = queue->head;
-                    huff_node_t *previuos = NULL;
+                    heap_pq_node_t *current = heap->head;
+                    heap_pq_node_t *previuos = NULL;
 
                     short is_present = 0;
                     while (current && !is_present) {
-                        const char *element = current->data->element;
-                        int weight = current->data->weight;
+                        const char *element = current->tree_node->data->element;
+                        int weight = current->tree_node->data->weight;
 
                         // comparar si un string es igual a otro, es decir, sí el
                         // char_as_string que es el leido, es igual al de algun nodo
@@ -111,14 +112,14 @@ void read_file_with_buffer(const char *filename) {
                             weight = weight + 1;
 
                             if(previuos == NULL) { //is the first node
-                                huff_node_t *topNode;
-                                remove_top_node(queue, &topNode);
-                                insert_node(queue, element, weight);
+                                heap_pq_node_t *topNode;
+                                remove_top_node(heap, &topNode);
+                                insert_node(heap, element, weight);
                                 ktfree(topNode);
 
                             } else {
-                                delete_node(queue, &previuos, &current);
-                                insert_node(queue, element, weight);
+                                delete_node(heap, &previuos, &current);
+                                insert_node(heap, element, weight);
                             }
                             ktfree(char_as_string);
 
@@ -129,7 +130,7 @@ void read_file_with_buffer(const char *filename) {
                     }
 
                     if(!is_present){
-                        insert_node(queue, char_as_string, 1);
+                        insert_node(heap, char_as_string, 1);
                     }
 
                 }
@@ -141,12 +142,12 @@ void read_file_with_buffer(const char *filename) {
         }
     }
 
-    print_queue(queue);
+    print_heap(heap);
 
-    huff_node_t *topNode;
+    heap_pq_node_t *topNode;
     printf("---------------inciia destrucción---------------------\n");
-    while (!is_empty(queue)) {
-        remove_top_node(queue, &topNode);
+    while (!is_empty(heap)) {
+        remove_top_node(heap, &topNode);
         //printf("aqui para: \n");
         //printf("%c: %d\n", topNode->data->element, topNode->data->weight);
         //printf("aqui para: \n");
@@ -155,7 +156,7 @@ void read_file_with_buffer(const char *filename) {
     }
     printf("Destruccion\n");
 
-    destroy_priority_queue(queue);
+    destroy_heap_priority_queue(heap);
 
     ktfree(buffer);
     fclose(file);

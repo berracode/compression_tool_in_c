@@ -121,13 +121,16 @@ void read_file_with_buffer(const char *filename) {
                                 heap_pq_node_t *topNode;
                                 remove_top_node(heap, &topNode);
                                 insert_node(heap, element, weight);
+                                printf("JUSTO AQUI 124\n");
                                 free_heap_pq_node(topNode);
 
                             } else {
                                 delete_node(heap, &previuos, &current);
                                 insert_node(heap, element, weight);
+                                printf("JUSTO AQUI 130\n");
+                                free_heap_pq_node(current);
                             }
-                            free_heap_pq_node(current);
+                            
                             break;
                         }
                         previuos = current;
@@ -177,15 +180,27 @@ void build_tree(){
         heap_pq_node_t *root_node = create_new_node(NULL, weight);
         print_heap_pq_node(root_node);
 
-        printf("aqui 1\n");
+        printf("() aqui 1 %p\n", first_temp->tree_node);
         root_node->tree_node->left = first_temp->tree_node;
-                printf("aqui 2\n");
+                
+                printf("aqui 2 %p\n", second_temp->tree_node);
 
         root_node->tree_node->right = second_temp->tree_node;
                 printf("aqui 3\n");
+        
+        first_temp->tree_node = NULL;
+        second_temp->tree_node = NULL;
 
+        //ktfree(first_temp);
+        free_heap_pq_node(second_temp);
+        free_heap_pq_node(first_temp);
+        //free_heap_pq_node(second_temp);
+        printf("AQUI (8)\n");
+        printf("QQQQQQQQQQQ DESPUES DE LIBERADOS F %s | S %s\n", root_node->tree_node->left->data->element, root_node->tree_node->right->data->element);
         insert_heap_pq_node(heap, root_node);
+
         traverse_list_and_trees(heap, print_heap_post_order);
+        
 
     }
 
@@ -219,10 +234,10 @@ void build_tree(){
 void compress_file(char *file_path){
 
     read_file_with_buffer(file_path);
-    //build_tree();
+    build_tree();
     //build_prefix_code_table(heap);
     
-    printf("---------------Liberando Priority queue---------------------\n");
+    /*printf("---------------Liberando Priority queue---------------------\n");
     heap_pq_node_t *topNode;
     while (!is_empty(heap)) {
         remove_top_node(heap, &topNode);
@@ -236,13 +251,13 @@ void compress_file(char *file_path){
     if(is_empty(heap)){
         printf("NO vacia\n");
         free_heap_priority_queue(heap);
-    }
-    
-    //printf("------------ DESTRUYENDO ARBOL BINARIO -----\n");
-    /*if (!is_empty(heap)){
-        free_binary_heap_pq(heap);
     }*/
     
+    printf("------------ DESTRUYENDO ARBOL BINARIO -----\n");
+    if (!is_empty(heap)){
+        free_binary_heap_pq(heap);
+    }
+    printf("FINALIZA SIN PROBLEMA\n");
 
 
 }

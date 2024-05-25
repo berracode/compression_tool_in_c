@@ -20,11 +20,20 @@ binary_heap_pq_t* create_binary_heap_pq(){
 heap_pq_node_t* create_new_node(char *element, int weight){
     heap_pq_node_t *temp = (heap_pq_node_t*)ktmalloc(sizeof(heap_pq_node_t));
     printf("heap_pq_node size %lu\n", sizeof(heap_pq_node_t));
-    tree_node_t *tree_node = (tree_node_t*)ktmalloc(sizeof(tree_node_t));
-    huff_data_t *data = (huff_data_t*)ktmalloc(sizeof(huff_data_t));
 
-    data->element = (char*)ktmalloc(strlen(element) + 1); // Asigna memoria para la copia
-    strcpy(data->element, element);
+    tree_node_t *tree_node = (tree_node_t*)ktmalloc(sizeof(tree_node_t));
+        printf("tree_node_t size %lu\n", sizeof(tree_node_t));
+
+    huff_data_t *data = (huff_data_t*)ktmalloc(sizeof(huff_data_t));
+        printf("huff_data_t size %lu\n", sizeof(huff_data_t));
+
+    printf("antes de violar el segmento\n");
+    if(element != NULL){
+        data->element = (char*)ktmalloc(strlen(element) + 1);
+        strcpy(data->element, element);
+    }else {
+        data->element = NULL;
+    }
     data->weight = weight;
     tree_node->data = data;
     tree_node->left = NULL;
@@ -153,19 +162,22 @@ void free_heap_priority_queue(binary_heap_pq_t *heap){
 }
 
 void free_heap_pq_node(heap_pq_node_t *node) {
+    printf("AKI ())9\n");
     if (node) {
-        printf("Se va liberar el nodo\n");
         if (node->tree_node) {
+            printf("Se va liberar el nodo %s | %d\n", node->tree_node->data->element, node->tree_node->data->weight);
+
             printf("Se va liberar el nodo del arbol\n");
-            if (node->tree_node->data) {
+            tree_node_t *temp = node->tree_node;
+            if (temp != NULL) {
                 printf("Se va liberar la data del arbol\n");
-                if(node->tree_node->data->element){
+                if(temp->data->element){
                     printf("Se va liberar el element\n");
-                    ktfree(node->tree_node->data->element);
+                    ktfree(temp->data->element);
                 }
                 ktfree(node->tree_node->data);
             }
-            ktfree(node->tree_node);
+            ktfree(temp);
         }
         ktfree(node);
     }else{
@@ -179,13 +191,13 @@ void free_tree_node(tree_node_t *node) {
     }
     free_tree_node(node->left);
     free_tree_node(node->right);
+    printf("Nodo: %s | %d\n", node->data->element, node->data->weight);
     if (node->data != NULL) {
         if(node->data->element !=NULL) {
-            printf("Tree: %s\n", node->data->element);
+            printf("$ Tree: %s\n", node->data->element);
             ktfree((void *)node->data->element);
         }
         ktfree(node->data);
-
     }
     ktfree(node); //mismo node
 }
@@ -197,6 +209,9 @@ void free_binary_heap_pq(binary_heap_pq_t *heap) {
         free_tree_node(current->tree_node);
         ktfree(current);
         current = next;
+        if(current !=  NULL){
+            printf("currente ES DIFERENTE\n");
+        }
     }
     ktfree(heap);
 }
@@ -215,7 +230,7 @@ void print_heap_post_order(tree_node_t *root) {
         print_heap_post_order(root->left);
         print_heap_post_order(root->right);
         if(root->data->element!=NULL){
-            printf("Element: %s, Weight: %d\n", root->data->element, root->data->weight);
+            printf("###### Element: %s, Weight: %d\n", root->data->element, root->data->weight);
         }
     }
 }

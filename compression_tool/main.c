@@ -58,7 +58,9 @@ char* get_utf8_string(const unsigned char *str, int *index) {
     }
 
     char* utf8_char = (char*)ktmalloc(length + 1);
-    
+    printf("dirección heap: %p\n", (void*)utf8_char);
+    printf("dirección stack: %p\n", (void*)&utf8_char);
+
     for (int i = 0; i < length; i++) {
         //printf("%c", str[*index + i]);
         utf8_char[i] = str[*index + i];
@@ -79,6 +81,7 @@ void read_file_with_buffer(const char *filename) {
     }
 
     unsigned char *buffer = ktmalloc(file_size);
+    char *char_as_string;
     printf("buffer sizeof: %lu \n", sizeof(buffer));
 
     size_t bytes_read;
@@ -88,11 +91,14 @@ void read_file_with_buffer(const char *filename) {
         printf("Bytes readed: %ld\n", bytes_read);
         int i = 0;
         while (i < bytes_read) {
-            //printf("char: %d %d\n", buffer[i], iscntrl(buffer[i]));
+            printf("char: %c\n", buffer[i]);
             if(!(buffer[i] >= 0 && buffer[i] <=31) && buffer[i]!=0x7F) {
-                char *char_as_string = get_utf8_string(buffer, &i);
-                //printf("Char as string %s\n", char_as_string);
+                char_as_string = get_utf8_string(buffer, &i);
+                printf("2 dirección heap: %p\n", (void*)char_as_string);
+                printf("2 dirección stack: %p\n", (void*)&char_as_string);
+                printf("Char as string %s\n", char_as_string);
                 if(is_empty(heap)){
+                    printf("primer nodo:\n");
                     insert_node(heap, char_as_string, 1);
                 } else {
 
@@ -101,7 +107,7 @@ void read_file_with_buffer(const char *filename) {
 
                     short is_present = 0;
                     while (current && !is_present) {
-                        const char *element = current->tree_node->data->element;
+                        char *element = current->tree_node->data->element;
                         int weight = current->tree_node->data->weight;
 
                         // comparar si un string es igual a otro, es decir, sí el
@@ -115,14 +121,13 @@ void read_file_with_buffer(const char *filename) {
                                 heap_pq_node_t *topNode;
                                 remove_top_node(heap, &topNode);
                                 insert_node(heap, element, weight);
-                                ktfree(topNode);
+                                free_heap_pq_node(topNode);
 
                             } else {
                                 delete_node(heap, &previuos, &current);
                                 insert_node(heap, element, weight);
                             }
-                            ktfree(char_as_string);
-
+                            free_heap_pq_node(current);
                             break;
                         }
                         previuos = current;
@@ -134,6 +139,9 @@ void read_file_with_buffer(const char *filename) {
                     }
 
                 }
+                printf("antes de free: %s\n", char_as_string);
+                ktfree(char_as_string);
+
             } else {
                 printf("control %02x\n", buffer[i]);
                 i++;
@@ -143,7 +151,6 @@ void read_file_with_buffer(const char *filename) {
     }
 
     traverse_list_and_trees(heap, print_heap_post_order);
-
     ktfree(buffer);
     fclose(file);
 }
@@ -212,24 +219,29 @@ void build_tree(){
 void compress_file(char *file_path){
 
     read_file_with_buffer(file_path);
-    build_tree();
-    build_prefix_code_table(heap);
-    /*
+    //build_tree();
+    //build_prefix_code_table(heap);
+    
+    printf("---------------Liberando Priority queue---------------------\n");
     heap_pq_node_t *topNode;
-    printf("---------------inciia destrucción---------------------\n");
     while (!is_empty(heap)) {
         remove_top_node(heap, &topNode);
         //printf("aqui para: \n");
-        //printf("%c: %d\n", topNode->data->element, topNode->data->weight);
+        printf("$ en remove %s: %d\n", topNode->tree_node->data->element, topNode->tree_node->data->weight);
         //printf("aqui para: \n");
 
-        ktfree(topNode);
+        free_heap_pq_node(topNode);
     }
-    */
-    printf("------------ DESTRUYENDO ARBOL BINARIO -----\n");
-    if (!is_empty(heap)){
-        free_heap_pq(heap);
+    printf("priority queue size: %d\n", heap->size);
+    if(is_empty(heap)){
+        printf("NO vacia\n");
+        free_heap_priority_queue(heap);
     }
+    
+    //printf("------------ DESTRUYENDO ARBOL BINARIO -----\n");
+    /*if (!is_empty(heap)){
+        free_binary_heap_pq(heap);
+    }*/
     
 
 

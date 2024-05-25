@@ -17,12 +17,14 @@ binary_heap_pq_t* create_binary_heap_pq(){
 
 }
 
-heap_pq_node_t* create_new_node(const char *element, int weight){
+heap_pq_node_t* create_new_node(char *element, int weight){
     heap_pq_node_t *temp = (heap_pq_node_t*)ktmalloc(sizeof(heap_pq_node_t));
+    printf("heap_pq_node size %lu\n", sizeof(heap_pq_node_t));
     tree_node_t *tree_node = (tree_node_t*)ktmalloc(sizeof(tree_node_t));
     huff_data_t *data = (huff_data_t*)ktmalloc(sizeof(huff_data_t));
 
-    data->element = element;
+    data->element = (char*)ktmalloc(strlen(element) + 1); // Asigna memoria para la copia
+    strcpy(data->element, element);
     data->weight = weight;
     tree_node->data = data;
     tree_node->left = NULL;
@@ -89,8 +91,12 @@ void insert_heap_pq_node(binary_heap_pq_t *heap, heap_pq_node_t *new_node){
 
 }
 
-void insert_node(binary_heap_pq_t *heap, const char *element, int weight){
+void insert_node(binary_heap_pq_t *heap, char *element, int weight){
+    printf("3 dirección heap: %p\n", (void*)element);
+    printf("3 dirección stack: %p\n", (void*)&element);
     heap_pq_node_t *new_node = create_new_node(element, weight);
+    printf("4 dirección heap: %p\n", (void*)new_node->tree_node->data->element);
+    printf("4 dirección stack: %p\n", (void*)&(new_node->tree_node->data->element));
     if(is_empty(heap)){
         heap->head = new_node;
     } else {
@@ -121,9 +127,6 @@ void delete_node(binary_heap_pq_t *heap, heap_pq_node_t **previous, heap_pq_node
     } else {
         (*previous)->next = NULL;
     }
-    ktfree((*current)->tree_node->data);
-    ktfree((*current)->tree_node);
-    ktfree(*current);
     heap->size--;
 }
 
@@ -136,35 +139,46 @@ void remove_top_node(binary_heap_pq_t *heap, heap_pq_node_t **topNode){
     heap->size--;
 }
 
-void destroy_heap_priority_queue(binary_heap_pq_t *heap){
+void free_heap_priority_queue(binary_heap_pq_t *heap){
     heap_pq_node_t *current = heap->head;
-    printf("en la linea de arriba da el seg fault\n");
+    printf("head pd: %p\n", current);
     while (current) {
-        printf("en el while\n");
 
         heap_pq_node_t *next = current->next;
-        printf("en el while 2\n");
-        printf("addr wh : %p\n", current);
 
-        ktfree(current->tree_node->data);
-                printf("en el while 3\n");
-
-        ktfree(current->tree_node);
-                printf("en el while 4\n");
-
-        ktfree(current);
+        free_heap_pq_node(current);
         current = next;
     }
-    printf("no llega aqui\n");
     ktfree(heap);
 }
 
-void free_tree(tree_node_t *node) {
+void free_heap_pq_node(heap_pq_node_t *node) {
+    if (node) {
+        printf("Se va liberar el nodo\n");
+        if (node->tree_node) {
+            printf("Se va liberar el nodo del arbol\n");
+            if (node->tree_node->data) {
+                printf("Se va liberar la data del arbol\n");
+                if(node->tree_node->data->element){
+                    printf("Se va liberar el element\n");
+                    ktfree(node->tree_node->data->element);
+                }
+                ktfree(node->tree_node->data);
+            }
+            ktfree(node->tree_node);
+        }
+        ktfree(node);
+    }else{
+        printf("Nada que liberar\n");
+    }
+}
+
+void free_tree_node(tree_node_t *node) {
     if (node == NULL) {
         return;
     }
-    free_tree(node->left);
-    free_tree(node->right);
+    free_tree_node(node->left);
+    free_tree_node(node->right);
     if (node->data != NULL) {
         if(node->data->element !=NULL) {
             printf("Tree: %s\n", node->data->element);
@@ -176,11 +190,11 @@ void free_tree(tree_node_t *node) {
     ktfree(node); //mismo node
 }
 
-void free_heap_pq(binary_heap_pq_t *heap) {
+void free_binary_heap_pq(binary_heap_pq_t *heap) {
     heap_pq_node_t *current = heap->head;
     while (current != NULL) {
         heap_pq_node_t *next = current->next;
-        free_tree(current->tree_node);
+        free_tree_node(current->tree_node);
         ktfree(current);
         current = next;
     }

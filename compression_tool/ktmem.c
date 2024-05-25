@@ -9,7 +9,7 @@ void* custom_malloc(size_t size, const char* file, int line) {
         fprintf(stderr, "Error: Can't set memory in %s in line %d\n", file, line);
         exit(EXIT_FAILURE);
     }
-    //printf("Set memory: %zu bytes in %s line %d\n", size, file, line);
+    printf("Set memory: %zu bytes in %s line %d\n", size, file, line);
     return ptr;
 }
 

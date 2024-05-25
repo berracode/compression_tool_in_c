@@ -142,7 +142,7 @@ void read_file_with_buffer(const char *filename) {
         }
     }
 
-    print_heap(heap);
+    traverse_list_and_trees(heap, print_heap_post_order);
 
     ktfree(buffer);
     fclose(file);
@@ -158,7 +158,7 @@ void build_tree(){
     heap_pq_node_t *first_temp;
     heap_pq_node_t *second_temp;
 
-    printf("---------------inciia destrucción---------------------\n");
+    printf("---------------inciia CONStrucción del Arbol binario---------------------\n");
     while (!is_empty(heap)&& heap->size > 1) {
         remove_top_node(heap, &first_temp);
         remove_top_node(heap, &second_temp);
@@ -178,19 +178,12 @@ void build_tree(){
                 printf("aqui 3\n");
 
         insert_heap_pq_node(heap, root_node);
-        print_heap(heap);
-        
-
-
-        //printf("aqui para: \n");
-
-        //ktfree(first_temp);
-        //ktfree(second_temp);
+        traverse_list_and_trees(heap, print_heap_post_order);
 
     }
 
     printf("hpq->size %d\n", heap->size);
-    if(!is_empty(heap)){
+    /*if(!is_empty(heap)){
         printf("addr: %p\n", heap->head->tree_node->data->element);
         ktfree(heap->head->tree_node->data);
         printf("addr 1.1: %p\n", heap->head->tree_node->data->element);
@@ -211,7 +204,7 @@ void build_tree(){
 
 
         printf("destruye todo los nodos\n");
-    }
+    }*/
 
 
 }
@@ -220,6 +213,7 @@ void compress_file(char *file_path){
 
     read_file_with_buffer(file_path);
     build_tree();
+    build_prefix_code_table(heap);
     /*
     heap_pq_node_t *topNode;
     printf("---------------inciia destrucción---------------------\n");
@@ -232,9 +226,9 @@ void compress_file(char *file_path){
         ktfree(topNode);
     }
     */
-    printf("Destruccion\n");
+    printf("------------ DESTRUYENDO ARBOL BINARIO -----\n");
     if (!is_empty(heap)){
-        destroy_heap_priority_queue(heap);
+        free_heap_pq(heap);
     }
     
 

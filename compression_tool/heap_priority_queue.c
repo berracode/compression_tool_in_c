@@ -159,6 +159,52 @@ void destroy_heap_priority_queue(binary_heap_pq_t *heap){
     ktfree(heap);
 }
 
+void free_tree(tree_node_t *node) {
+    if (node == NULL) {
+        return;
+    }
+    free_tree(node->left);
+    free_tree(node->right);
+    if (node->data != NULL) {
+        if(node->data->element !=NULL) {
+            printf("Tree: %s\n", node->data->element);
+            ktfree((void *)node->data->element);
+        }
+        ktfree(node->data);
+
+    }
+    ktfree(node); //mismo node
+}
+
+void free_heap_pq(binary_heap_pq_t *heap) {
+    heap_pq_node_t *current = heap->head;
+    while (current != NULL) {
+        heap_pq_node_t *next = current->next;
+        free_tree(current->tree_node);
+        ktfree(current);
+        current = next;
+    }
+    ktfree(heap);
+}
+
+void traverse_list_and_trees(binary_heap_pq_t *heap, void (*traverse_func)(tree_node_t *)) {
+    heap_pq_node_t *current = heap->head;
+    while (current != NULL) {
+        printf("Traversing a tree in the list:\n");
+        traverse_func(current->tree_node);
+        current = current->next;
+    }
+}
+
+void print_heap_post_order(tree_node_t *root) {
+    if (root != NULL) {
+        print_heap_post_order(root->left);
+        print_heap_post_order(root->right);
+        if(root->data->element!=NULL){
+            printf("Element: %s, Weight: %d\n", root->data->element, root->data->weight);
+        }
+    }
+}
 
 void print_heap(binary_heap_pq_t *heap){
     heap_pq_node_t *current = heap->head;
@@ -168,4 +214,95 @@ void print_heap(binary_heap_pq_t *heap){
         //printf("$ Element: %s - bytes: %lu | Weight: %d\n", current->tree_node->data->element,strlen(current->tree_node->data->element), current->tree_node->data->weight);
         current = current->next;
     }
+}
+
+int* increase(int *counter){
+    *counter = *counter + 1;
+    return counter;
+}
+
+void visit_tree_node_post_order(tree_node_t *node, int *edges, int *count_left, int *count_right, int is_left, char *code) {
+    printf("#######################################\n");
+    if (node == NULL) {
+        printf("path nullo para la %s\n", (is_left?"izquierda":"derecha"));
+
+        if(is_left){
+            *count_left = *count_left -1;
+
+        } else {
+            *count_right = *count_right -1;
+        }
+        return;
+    }
+    printf("entra a %s con peso %d: en la %s\n", node->data->element, node->data->weight, (is_left?"izquierda":"derecha"));
+    printf("code: %s\n", code);
+    printf("CL: %d\n", *count_left);
+    printf("CR: %d\n", *count_right);
+
+    *edges = *count_left+(*count_right);
+    printf("edges: %d\n", *edges);
+    if(*edges > 0){
+        //reservar memoria
+        int len = *edges;
+        if(code == NULL || len == 1){
+            code = (char*)ktmalloc(len + 1);
+        } else {
+            printf("QQQQQQQQQ AMPLIANDO VECTOR code: %s | %lu\n", code, strlen(code));
+            char *new_code = (char*)ktmalloc(len + 1);
+            strcpy(new_code, code);
+            code = (char*)ktmalloc(len + 1);
+            strcpy(code, new_code);
+            printf("new code sin modificar: %s\n", new_code);
+            //ktfree(code);
+            //code = new_code;
+        }
+
+        if(is_left){
+            code[len-1] = '0';
+        }else{
+            code[len-1] = '1';
+        }
+
+        printf("vector %s de %lu BYTES\n",code, strlen(code));
+    }
+
+    visit_tree_node_post_order(node->left, edges, increase(count_left), count_right, 1, code);
+    printf("Antes de ir a la derecha: %s\n", code);
+    visit_tree_node_post_order(node->right, edges, count_left, increase(count_right), 0, code);
+    if (node->data != NULL) {
+        if(node->data->element !=NULL) {
+            //*edges = *edges +1;
+            printf("sum: %d\n", *edges);
+            printf("hoja: %s a la %s | code: %s\n", node->data->element, (is_left?"izquierda":"derecha"), code);
+            //ktfree((void *)node->data->element);
+            //code = NULL;
+            *edges = 0;
+            if(*count_left>=1){
+                *count_left = *count_left -1;
+            }
+            if(*count_right>=1 && !is_left){
+                *count_right = *count_right -1;
+            }
+            printf("FINAL CODE EN HOJA: %s\n", code);
+            printf("HOJA CL: %d\n", *count_left);
+            printf("HOJA CR: %d\n", *count_right);
+            printf("--------------------\n\n");
+
+        }
+        //ktfree(node->data);
+
+    }
+    //ktfree(node); //mismo node
+}
+
+void build_prefix_code_table(binary_heap_pq_t *heap){
+    /*
+    recorrer hasta las hojas
+    si es un nodo a la izquierda ponerle 0
+    */
+   heap_pq_node_t *head = heap->head;
+   int i = 0, count_left = 0, count_right = 0;
+   char *code;
+   visit_tree_node_post_order(head->tree_node, &i, &count_left, &count_right, 1, code);
+   ktfree(code);
 }

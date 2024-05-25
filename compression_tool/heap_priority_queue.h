@@ -78,9 +78,15 @@ void delete_node(binary_heap_pq_t *heap, heap_pq_node_t **previous, heap_pq_node
 void remove_top_node(binary_heap_pq_t *heap, heap_pq_node_t **topNode);
 void destroy_heap_priority_queue(binary_heap_pq_t *heap);
 
+void free_heap_pq(binary_heap_pq_t *heap);
+void free_tree(tree_node_t *node);
+
 void print_heap_pq_node(heap_pq_node_t *node);
 void print_heap(binary_heap_pq_t *heap);
+void build_prefix_code_table(binary_heap_pq_t *heap);
 
+void traverse_list_and_trees(binary_heap_pq_t *heap, void (*traverse_func)(tree_node_t *));
+void print_heap_post_order(tree_node_t *root);
 
 
 

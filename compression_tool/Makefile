@@ -6,10 +6,10 @@ CFLAGS = -Wall -Wextra -g
 CFLAGS = -g
 
 # Archivos de encabezado
-HEADERS = ktmem.h heap_priority_queue.h
+HEADERS = ktmem.h heap_priority_queue.h kthash_table.h
 
 # Archivos fuente
-SRCS = ktmem.c heap_priority_queue.c main.c
+SRCS = ktmem.c heap_priority_queue.c kthash_table.c main.c
 
 # Archivos objeto generados
 OBJS = $(SRCS:.c=.o)

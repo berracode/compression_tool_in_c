@@ -87,7 +87,7 @@ void free_heap_pq_node(heap_pq_node_t *node);
 
 void print_heap_pq_node(heap_pq_node_t *node);
 void print_heap(binary_heap_pq_t *heap);
-void build_prefix_code_table(binary_heap_pq_t *heap);
+
 
 void traverse_list_and_trees(binary_heap_pq_t *heap, void (*traverse_func)(tree_node_t *));
 void print_heap_post_order(tree_node_t *root);

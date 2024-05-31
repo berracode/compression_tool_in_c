@@ -2,9 +2,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include "heap_priority_queue.h"
+#include "kthash_table.h"
 #include "ktmem.h"
 
 binary_heap_pq_t *heap;
+kthash_table_t *prefix_hash_table;
 
 void help(char *argv){
     printf("\n");
@@ -67,7 +69,7 @@ char* get_utf8_string(const unsigned char *str, int *index) {
     return utf8_char;
 }
 
-void read_file_with_buffer(const char *filename) {
+void read_file_with_buffer(const char *filename, unsigned int *count_characters) {
     long file_size = get_file_size(filename);
 
     FILE *file = fopen(filename, "rb");
@@ -90,6 +92,7 @@ void read_file_with_buffer(const char *filename) {
                 char_as_string = get_utf8_string(buffer, &i);
                 if(is_empty(heap)){
                     insert_node(heap, char_as_string, 1);
+                    *count_characters = *count_characters + 1;
                 } else {
 
                     heap_pq_node_t *current = heap->head;
@@ -126,6 +129,7 @@ void read_file_with_buffer(const char *filename) {
 
                     if(!is_present){
                         insert_node(heap, char_as_string, 1);
+                        *count_characters = *count_characters + 1;
                     }
 
                 }
@@ -137,7 +141,7 @@ void read_file_with_buffer(const char *filename) {
 
         }
     }
-    printf("\n");
+    printf("\ncount_characters %d\n", *count_characters);
 
     traverse_list_and_trees(heap, print_heap_post_order);
     ktfree(buffer);
@@ -179,11 +183,120 @@ void build_tree(){
 
 }
 
-void compress_file(char *file_path){
+int* increase(int *counter){
+    *counter = *counter + 1;
+    return counter;
+}
 
-    read_file_with_buffer(file_path);
+void fill_with_blank_space(char *code, int len){
+    //printf("ESPACIO EN BLANCO: %d\n", len);
+    for (int i = 0; i < len; i++)
+    {
+        code[i] = 32;
+    }
+    code[len] = '\0';
+}
+
+
+void visit_tree_node_post_order(tree_node_t *node, int *edges, int *count_left, int *count_right, int is_left, char *code) {
+    if (node == NULL) {
+        if(is_left){
+            *count_left = *count_left -1;
+
+        } else {
+            *count_right = *count_right -1;
+        }
+        return;
+    }
+
+    *edges = *count_left+(*count_right);
+    //printf("---------------------------\n");
+    //printf("CL %d | CR %d\n", *count_left, *count_right);
+    //printf("### peso: %d\n",node->data->weight);
+    if(*edges > 0){
+        int len = *edges;
+        //printf("len %d | code %s |\n\n", len, code);
+        if(code == NULL || len == 1){
+            code = (char*)ktmalloc(len + 1);
+            fill_with_blank_space(code, len);
+        } else if(code != NULL) {
+            char *new_code = (char*)ktmalloc(len + 1);
+            strcpy(new_code, code);
+            code = (char*)ktmalloc(len + 1);
+            code[len] = '\0';
+            //fill_with_blank_space(code, len);
+            strcpy(code, new_code);
+            //printf("new code sin modificar: %s\n", new_code);
+            ktfree(new_code);
+        }
+        if(is_left){
+            code[len-1] = '0';
+            //printf("#### Cadena %s\n", code);
+        }else{
+            code[len-1] = '1';
+            //printf("#### Cadena %s\n", code);
+        }
+    }
+    visit_tree_node_post_order(node->left, edges, increase(count_left), count_right, 1, code);
+    visit_tree_node_post_order(node->right, edges, count_left, increase(count_right), 0, code);
+    if (node->data != NULL) {
+        if(node->data->element !=NULL) {
+            //printf("(2) CL %d | CR %d | Is_left %d\n", *count_left, *count_right, is_left);
+
+            *edges = 0;
+            if(*count_left>=1 && is_left){
+                *count_left = *count_left -1;
+            }
+            if(*count_right>=1 && !is_left){
+                *count_right = *count_right -1;
+            }
+            printf("(3) CL %d | CR %d | Is_left %d\n", *count_left, *count_right, is_left);
+            insert_prefix_code(prefix_hash_table, node->data->element, code);
+            printf("|\t\t%s \t\t|\t\t %d\t\t|\t\t%s\t\t|\t\t%ld\t\t|\n",node->data->element, node->data->weight, code, strlen(code));
+
+        }else {
+              //          printf("(NODO ROOT 1) CL %d | CR %d | Is_left %d\n", *count_left, *count_right, is_left);
+
+            if(*count_left>=1 && is_left){
+                *count_left = *count_left -1;
+            }
+            if(*count_right>=1 && !is_left){
+                *count_right = *count_right -1;
+            }
+            //printf("(NODO ROOT 2) CL %d | CR %d | Is_left %d\n", *count_left, *count_right, is_left);
+        }
+        ktfree(code);
+    }
+}
+
+void build_prefix_code_table(){
+    /*
+    recorrer hasta las hojas
+    si es un nodo a la izquierda ponerle 0
+    */
+
+    heap_pq_node_t *head = heap->head;
+    int i = 0, count_left = 0, count_right = 0;
+    char *code = NULL;
+    printf("|\t\tCHAR\t\t|\t\tFREQ\t\t|\t\tCODE\t\t|\t\tBITS\t\t|\n");
+    visit_tree_node_post_order(head->tree_node, &i, &count_left, &count_right, 1, code);
+    ktfree(code);
+}
+
+void compress_file(char *file_path) {
+    unsigned int count_characters = 0;
+    read_file_with_buffer(file_path, &count_characters);
     build_tree();
-    build_prefix_code_table(heap);
+    printf("---------------Ending binary tree build---------------------\n");
+
+    prefix_hash_table = create_prefix_table(count_characters);
+    build_prefix_code_table();
+    printf("---------------PREFIX HASH_TABLE---------------------\n");
+    for (size_t i = 0; i < prefix_hash_table->size; i++) {
+        printf("Character: %s, Bits: %s\n", prefix_hash_table->prefix_codes[i].character, prefix_hash_table->prefix_codes[i].bits);
+    }
+    free_prefix_table(prefix_hash_table);
+
     traverse_list_and_trees(heap, print_heap_post_order);
 
     

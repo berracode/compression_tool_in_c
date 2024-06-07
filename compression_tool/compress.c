@@ -5,6 +5,7 @@
 #include "compress.h"
 #include "ktmem.h"
 #include "heap_priority_queue.h"
+#include "binary_utils.h"
 
 char* get_char_as_string(const char *str, int *index) {
     char c = str[*index];
@@ -50,7 +51,7 @@ char* calculate_frequencies_table_with_hash_table(hash_table_t *hash_table, cons
     rewind(file);
 
     char *content = ktmalloc(file_size);
-    char *char_as_string;
+    char *char_as_string = NULL;
 
     size_t bytes_read;
     
@@ -75,7 +76,6 @@ char* calculate_frequencies_table_with_hash_table(hash_table_t *hash_table, cons
     return content;
 }
 
-
 void create_priority_queue(binary_heap_pq_t *heap, hash_table_t *hash_table) {
     printf("Construyendo priority_queue...\n");
     for (int i = 0; i < TABLE_SIZE; i++) {
@@ -87,8 +87,6 @@ void create_priority_queue(binary_heap_pq_t *heap, hash_table_t *hash_table) {
         }
     }
 }
-
-
 
 void create_tree(binary_heap_pq_t *heap){
     // leer los dos primeros nodos y removerlos
@@ -125,7 +123,6 @@ void create_tree(binary_heap_pq_t *heap){
 
 }
 
-
 void create_huffman_tree(binary_heap_pq_t *heap, hash_table_t *hash_table) {
 
     create_priority_queue(heap, hash_table);
@@ -136,3 +133,147 @@ void create_huffman_tree(binary_heap_pq_t *heap, hash_table_t *hash_table) {
 
 }
 
+// FUNCTIONS FOR PREFIX CODE TABLE
+int* increase(int *counter){
+    *counter = *counter + 1;
+    return counter;
+}
+
+void fill_with_blank_space(char *code, int len){
+    for (int i = 0; i < len; i++){
+        code[i] = 32;
+    }
+    code[len] = '\0';
+}
+
+void visit_tree_node_post_order(tree_node_t *node, int *edges, int *count_left, int *count_right, int is_left, char *code, kthash_table_t *prefix_code_table) {
+    if (node == NULL) {
+        if(is_left){
+            *count_left = *count_left -1;
+
+        } else {
+            *count_right = *count_right -1;
+        }
+        return;
+    }
+
+    *edges = *count_left+(*count_right);
+    //printf("---------------------------\n");
+    //printf("CL %d | CR %d\n", *count_left, *count_right);
+    //printf("### peso: %d\n",node->data->weight);
+    if(*edges > 0){
+        int len = *edges;
+        //printf("len %d | code %s |\n\n", len, code);
+        if(code == NULL || len == 1){
+            code = (char*)ktmalloc(len + 1);
+            fill_with_blank_space(code, len);
+        } else if(code != NULL) {
+            char *new_code = (char*)ktmalloc(len + 1);
+            strcpy(new_code, code);
+            code = (char*)ktmalloc(len + 1);
+            code[len] = '\0';
+            //fill_with_blank_space(code, len);
+            strcpy(code, new_code);
+            //printf("new code sin modificar: %s\n", new_code);
+            ktfree(new_code);
+        }
+        if(is_left){
+            code[len-1] = '0';
+            //printf("#### Cadena %s\n", code);
+        }else{
+            code[len-1] = '1';
+            //printf("#### Cadena %s\n", code);
+        }
+    }
+    visit_tree_node_post_order(node->left, edges, increase(count_left), count_right, 1, code, prefix_code_table);
+    visit_tree_node_post_order(node->right, edges, count_left, increase(count_right), 0, code, prefix_code_table);
+    if (node->data != NULL) {
+        if(node->data->element !=NULL) {
+            //printf("(2) CL %d | CR %d | Is_left %d\n", *count_left, *count_right, is_left);
+
+            *edges = 0;
+            if(*count_left>=1 && is_left){
+                *count_left = *count_left -1;
+            }
+            if(*count_right>=1 && !is_left){
+                *count_right = *count_right -1;
+            }
+            //printf("(3) CL %d | CR %d | Is_left %d\n", *count_left, *count_right, is_left);
+            insert_prefix_code(prefix_code_table, node->data->element, code);
+            printf("|\t\t%s \t\t|\t\t %d\t\t|\t\t%s\t\t|\t\t%ld\t\t|\n",node->data->element, node->data->weight, code, strlen(code));
+
+        }else {
+              //          printf("(NODO ROOT 1) CL %d | CR %d | Is_left %d\n", *count_left, *count_right, is_left);
+
+            if(*count_left>=1 && is_left){
+                *count_left = *count_left -1;
+            }
+            if(*count_right>=1 && !is_left){
+                *count_right = *count_right -1;
+            }
+            //printf("(NODO ROOT 2) CL %d | CR %d | Is_left %d\n", *count_left, *count_right, is_left);
+        }
+        ktfree(code);
+    }
+}
+
+void build_prefix_code_table(binary_heap_pq_t *heap, kthash_table_t *prefix_code_table){
+    /*
+    recorrer hasta las hojas
+    si es un nodo a la izquierda ponerle 0
+    */
+
+    heap_pq_node_t *head = heap->head;
+    int i = 0, count_left = 0, count_right = 0;
+    char *code = NULL;
+    printf("|\t\tCHAR\t\t|\t\tFREQ\t\t|\t\tCODE\t\t|\t\tBITS\t\t|\n");
+    visit_tree_node_post_order(head->tree_node, &i, &count_left, &count_right, 1, code, prefix_code_table);
+    ktfree(code);
+}
+
+// FUNCTIONS TO WRITE DATA COMPRESSED
+void write_headers_in_compressed_file(kthash_table_t *prefix_code_table, const char *output_filename, unsigned int count_characters){
+    FILE *output = fopen(output_filename, "wb");
+
+    if (!output) {
+        perror("Error: opening file");
+        exit(EXIT_FAILURE);
+    }
+    // Escribir el tamaño de la tabla de prefijos
+    printf("tabla size: %ld, sizeof: %zu\n", prefix_code_table->size, sizeof(prefix_code_table->size));
+    printf("count_characters size of: %zu\n", sizeof(count_characters));
+    fwrite(&prefix_code_table->size, sizeof(uint8_t), 1, output);
+
+    // Escribir cada prefijo en el encabezado
+    for (size_t i = 0; i < prefix_code_table->size; i++) {
+        ktprefix_code_t *current = prefix_code_table->prefix_codes[i];
+        while (current != NULL) {
+            //printf("escribiendo header char %s bits %s\n",current->character, current->bits);
+            unsigned int char_len = strlen(current->character);
+            unsigned int bits_len = strlen(current->bits);
+
+            //printf("char_len %u y sizeof %zu\n", char_len, sizeof(char_len));// 1 - 4
+            //printf("bits_len %u y sizeof %zu\n--------\n", bits_len, sizeof(bits_len));
+
+            
+            // Escribir la longitud del carácter y la cadena del carácter
+            fwrite(&char_len, sizeof(uint8_t), 1, output);
+            fwrite(current->character, sizeof(char), char_len, output);
+            
+            // Escribir la longitud de los bits y la cadena de bits
+            fwrite(&bits_len, sizeof(uint8_t), 1, output);
+            //fwrite(prefix_code_table->prefix_codes[i].bits, sizeof(char), bits_len, output);
+            write_bits(output, current->bits);
+
+            current = current->next;
+        }
+
+    }
+
+    // Escribir un delimitador (un salto de línea) para separar el encabezado del contenido
+    char delimiter = '\n';
+    fwrite(&delimiter, sizeof(char), 1, output);
+
+    fclose(output);
+
+}

@@ -85,15 +85,25 @@ void insert_prefix_code(kthash_table_t *table, char *character, char *bits) {
 
 }
 
+void free_prefix_code_bucket(ktprefix_code_t *temp){
+    if (temp == NULL) {
+        return;
+    }
+
+    ktfree(temp->character);
+    ktfree(temp->bits);
+    ktfree(temp);
+
+
+}
+
 void free_prefix_table(kthash_table_t *table) {
     for (size_t i = 0; i < table->capacity; i++) {
         ktprefix_code_t *current = table->prefix_codes[i];
         while (current != NULL) {
             ktprefix_code_t *temp = current;
             current = current->next;
-            ktfree(temp->character);
-            ktfree(temp->bits);
-            ktfree(temp);
+            free_prefix_code_bucket(temp);
         }
     }
     ktfree(table->prefix_codes);

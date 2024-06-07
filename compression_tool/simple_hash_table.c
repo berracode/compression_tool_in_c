@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "simple_hash_table.h"
+#include "ktmem.h"
 
 unsigned int hash_function2(const char *str) {
     unsigned int hash = 5381;
@@ -12,11 +13,15 @@ unsigned int hash_function2(const char *str) {
 }
 
 hash_table_t* create_table() {
-    hash_table_t *hashTable = malloc(sizeof(hash_table_t));
-    hashTable->table = malloc(sizeof(hash_node_t*) * TABLE_SIZE);
-    for (int i = 0; i < TABLE_SIZE; i++) {
+    hash_table_t *hashTable = (hash_table_t *)ktmalloc(sizeof(hash_table_t));
+    hashTable->table = (hash_node_t **)calloc(TABLE_SIZE, sizeof(hash_node_t *));
+    for (int i = 0; i < TABLE_SIZE; i++){
         hashTable->table[i] = NULL;
     }
+
+    hashTable->size = 0;
+    hashTable->capacity = TABLE_SIZE;
+    
     return hashTable;
 }
 

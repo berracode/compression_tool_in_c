@@ -94,8 +94,7 @@ void insert_node(binary_heap_pq_t *heap, char *element, int weight){
             previous = current;
             current = current->next;
         }
-        
-         if (previous == NULL) {
+        if (previous == NULL) {
             new_node->next = heap->head;
             heap->head = new_node;
         } else {

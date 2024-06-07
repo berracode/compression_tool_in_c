@@ -8,10 +8,10 @@ CFLAGS_DEV = -Wall -Wextra -g
 CFLAGS_PROD = -O3 -flto -DNDEBUG -march=native
 
 # Archivos de encabezado
-HEADERS = ktmem.h heap_priority_queue.h kthash_table.h compress.h simple_hash_table.h
+HEADERS = ktmem.h heap_priority_queue.h kthash_table.h compress.h simple_hash_table.h binary_utils.h
 
 # Archivos fuente
-SRCS = ktmem.c heap_priority_queue.c kthash_table.c compress.c simple_hash_table.c main.c
+SRCS = ktmem.c heap_priority_queue.c kthash_table.c compress.c simple_hash_table.c binary_utils.c main.c
 
 # Archivos objeto generados
 OBJS = $(SRCS:.c=.o)

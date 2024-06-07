@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "ktmem.h"
 #include "heap_priority_queue.h"
+#include "ktmem.h"
 
 binary_heap_pq_t* create_binary_heap_pq(){
     binary_heap_pq_t *heap = (binary_heap_pq_t *)ktmalloc(sizeof(binary_heap_pq_t));
@@ -63,7 +62,7 @@ void insert_heap_pq_node(binary_heap_pq_t *heap, heap_pq_node_t *new_node){
 
         heap_pq_node_t *current = heap->head;
         heap_pq_node_t *previous = NULL;
-        print_heap_pq_node(current);
+        //print_heap_pq_node(current);
 
         while (current && current->tree_node->data->weight < new_node->tree_node->data->weight){
             previous = current;
@@ -165,7 +164,7 @@ void free_tree_node(tree_node_t *node) {
 
     if (node->data != NULL) {
         if(node->data->element !=NULL) {
-            printf("$ Tree: %s\n", node->data->element);
+            //printf("$ Tree: %s\n", node->data->element);
             ktfree((void *)node->data->element);
         }
         ktfree(node->data);
@@ -187,7 +186,6 @@ void free_binary_heap_pq(binary_heap_pq_t *heap) {
 void traverse_list_and_trees(binary_heap_pq_t *heap, void (*traverse_func)(tree_node_t *)) {
     heap_pq_node_t *current = heap->head;
     while (current != NULL) {
-        printf("Traversing a tree in the list:\n");
         traverse_func(current->tree_node);
         current = current->next;
     }

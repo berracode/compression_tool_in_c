@@ -1,15 +1,17 @@
 # Nombre del compilador
 CC = gcc
 
-# Opciones de compilación
-CFLAGS = -Wall -Wextra -g
-CFLAGS = -g
+# Opciones de compilación para desarrollo
+CFLAGS_DEV = -Wall -Wextra -g
+
+# Opciones de compilación para producción
+CFLAGS_PROD = -O3 -flto -DNDEBUG -march=native
 
 # Archivos de encabezado
-HEADERS = ktmem.h heap_priority_queue.h kthash_table.h
+HEADERS = ktmem.h heap_priority_queue.h kthash_table.h compress.h simple_hash_table.h
 
 # Archivos fuente
-SRCS = ktmem.c heap_priority_queue.c kthash_table.c main.c
+SRCS = ktmem.c heap_priority_queue.c kthash_table.c compress.c simple_hash_table.c main.c
 
 # Archivos objeto generados
 OBJS = $(SRCS:.c=.o)
@@ -39,4 +41,12 @@ clean:
 # Recompilar todo desde cero
 rebuild: clean all
 
-.PHONY: all clean clean_objs rebuild
+# Tareas para compilación de desarrollo y producción
+dev: CFLAGS = $(CFLAGS_DEV)
+dev: rebuild
+
+prod: CFLAGS = $(CFLAGS_PROD)
+prod: rebuild
+	strip $(EXEC)
+
+.PHONY: all clean clean_objs rebuild dev prod

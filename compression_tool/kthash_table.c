@@ -17,6 +17,7 @@ kthash_table_t* create_prefix_table(size_t initial_capacity) {
     }
     table->size = 0;
     table->capacity = initial_capacity;
+    table->max_bits_len = 0;
     return table;
 }
 
@@ -48,7 +49,7 @@ ktprefix_code_t* find_prefix_code(kthash_table_t *table, const char *character) 
 }
 
 
-void insert_prefix_code(kthash_table_t *table, char *character, char *bits) {
+void insert_prefix_code(kthash_table_t *table, char *character, int frequency, char *bits) {
     if(character != NULL && bits != NULL){
         unsigned int index= hash_function(table->capacity, character);
         printf("INDEX HT %d\n", index);
@@ -72,14 +73,13 @@ void insert_prefix_code(kthash_table_t *table, char *character, char *bits) {
             }
             current->next = new_node;
         }
-
+        table->max_bits_len+=(frequency*strlen(bits));
 
         //table->prefix_codes[table->size].character = 
         //strcpy(table->prefix_codes[table->size].character, character);
 
         //table->prefix_codes[table->size].bits = (char*)ktmalloc(strlen(bits) + 1);
         //strcpy(table->prefix_codes[table->size].bits, bits);
-
         table->size++;
     }
 
@@ -113,7 +113,7 @@ void free_prefix_table(kthash_table_t *table) {
 
 
 void print_prefix_table(const kthash_table_t *table) {
-    printf("capacity: %ld - size: %ld\n", table->capacity, table->size);
+    printf("capacity: %ld - size: %ld - max_bits_len: %ld\n", table->capacity, table->size, table->max_bits_len);
     for (size_t i = 0; i < table->capacity; i++) {
         ktprefix_code_t *current = table->prefix_codes[i];
         if(current != NULL) {

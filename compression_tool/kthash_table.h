@@ -13,11 +13,12 @@ typedef struct kthash_table_t{
     ktprefix_code_t **prefix_codes;
     size_t size;
     size_t capacity;
+    size_t max_bits_len;
 } kthash_table_t;
 
 kthash_table_t* create_prefix_table(size_t initial_capacity);
 
-void insert_prefix_code(kthash_table_t *table, char *character, char *bits);
+void insert_prefix_code(kthash_table_t *table, char *character, int frequency, char *bits);
 
 void free_prefix_table(kthash_table_t *table);
 

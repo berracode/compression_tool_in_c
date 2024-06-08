@@ -199,7 +199,7 @@ void visit_tree_node_post_order(tree_node_t *node, int *edges, int *count_left, 
                 *count_right = *count_right -1;
             }
             //printf("(3) CL %d | CR %d | Is_left %d\n", *count_left, *count_right, is_left);
-            insert_prefix_code(prefix_code_table, node->data->element, code);
+            insert_prefix_code(prefix_code_table, node->data->element, node->data->weight, code);
             printf("|\t\t%s \t\t|\t\t %d\t\t|\t\t%s\t\t|\t\t%ld\t\t|\n",node->data->element, node->data->weight, code, strlen(code));
 
         }else {

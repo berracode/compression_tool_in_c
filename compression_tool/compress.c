@@ -277,3 +277,55 @@ void write_headers_in_compressed_file(kthash_table_t *prefix_code_table, const c
     fclose(output);
 
 }
+
+void write_data_encoded_in_compressed_file(const char *content, const char *output_file_path, kthash_table_t *prefix_code_table){
+
+    FILE *output_file = fopen(output_file_path, "ab");
+    if (!output_file) {
+        perror("Error al abrir el archivo");
+        exit(EXIT_FAILURE);
+
+    }
+
+    printf("---------- INICIA ESCRITURA DE DATA COMPRIMIDA---------\n");
+    //recorrer el archivo plano y sacar los caracteres y buscarlos en la hashtable
+    // TODO: (función hash para optimizar busqueda)
+    // TODO: volver esto un metodo ya que se reutiliza
+
+    size_t file_size = strlen(content);
+    size_t max_bits_len = prefix_code_table->max_bits_len;
+    printf("#######################\n");
+    printf("file size: %ld\n", file_size);
+
+    char *char_as_string;
+    char *compress_data = ktmalloc(max_bits_len);
+    int writter_index = 0;
+
+    int index = 0;
+    printf("bytes_read_pf %ld\n", file_size);
+    while (index < file_size){
+        char_as_string = get_char_as_string(content, &index);
+        //printf("char_string %s | ht size: %zu| index=%d\n", char_as_string, prefix_code_table->size, index);
+
+        ktprefix_code_t *found = find_prefix_code(prefix_code_table, char_as_string);
+        int bits_len = strlen(found->bits);
+        for (size_t i = 0; i < bits_len; i++){
+            compress_data[writter_index] = found->bits[i];
+            writter_index++;
+        }
+
+        //concatenate_bits2(&compress_data, found->bits);
+        //strcat(compress_data, found->bits);
+        //printf("compress_data %s | wi = %d\n", compress_data, writter_index);
+        ktfree(char_as_string);
+
+    }
+    //TODO: optimizar el write_bits, pero para optimizarlo necesito la cadena de caracteres
+    write_bits(output_file, compress_data);
+
+    printf("---------- BITS CD:|%ld|\n", strlen(compress_data));
+    printf("---------- FINALIZA ESCRITURA DE DATA COMPRIMIDA---------\n");
+    ktfree(compress_data);
+    fclose(output_file);
+
+}

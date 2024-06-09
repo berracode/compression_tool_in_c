@@ -1,8 +1,22 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "ktmem.h"
 #include "binary_utils.h"
 
+
+char* get_string_from_byte(uint8_t value, int bits){
+    char *bits_string = ktmalloc(bits+1);
+    for (int i = bits - 1; i >= 0; i--) {
+        unsigned int mask = 1 << i;
+        char put = (value & mask) ? '1' : '0';
+        //putchar(put);
+        bits_string[bits-(i+1)] = put;
+    }
+    bits_string[bits]='\0';
+    //putchar('\n');
+    return bits_string;
+}
 
 void print_binary(unsigned int value, int bits) {
     for (int i = bits - 1; i >= 0; i--) {
@@ -33,16 +47,17 @@ uint8_t bits_to_byte(const char *bits) {
     }*/
 
     // Iterar sobre la cadena de bits hasta que se alcance el final ('\0')
-    // 110110110
-    // 10110110  byte
-    // 00000001 bit_value
-    //B11011011 byte 
+    // iter 0, 1, 2, 3, 4 (\0)
+    // 0111
+    // 00000000,00000000,00000010,00000110, byte desplazado
+    // 00000000,00000001,00000001,00000001 bit_value
+    //B00000000,00000001,00000011,00000111 byte with bit value
     int iter = 0;
     while (*bits != '\0' && iter < 8) {
         //printf("byte antes %d\n", byte);
         // Desplazar el byte un lugar a la izquierda
         byte <<= 1;
-        //printf("byte despues %d\n", byte);
+        //printf("byte desplazado %d\n", byte);
 
         // Convertir el carácter binario actual en un valor numérico (0 o 1)
         uint8_t bit_value = (*bits == '1') ? 1 : 0;
@@ -61,13 +76,13 @@ uint8_t bits_to_byte(const char *bits) {
 
 void write_bits(FILE *file, const char *bits) {
     size_t len = strlen(bits);
-    size_t full_bytes = len / 8;
+    size_t required_bytes = len / 8;
     size_t remaining_bits = len % 8;
 
-    //printf("len %zu, full %zu, r %zu\n", len, full_bytes, remaining_bits);
+    //printf("len %zu, requiered %zu, r %zu\n", len, required_bytes, remaining_bits);
 
     // Escribir bytes completos
-    for (size_t i = 0; i < full_bytes; i++) {
+    for (size_t i = 0; i < required_bytes; i++) {
         //printf("QQQQQQQQQQQQQQQQQQQQQQ ocupa más de un byte\n");
         uint8_t byte = bits_to_byte(bits + i * 8);
         //printf("byte: %d\n", byte);
@@ -79,9 +94,44 @@ void write_bits(FILE *file, const char *bits) {
         //printf("QQQQQQQQQQQQQQQQQQQQQQ NO ocupa más de un byte\n");
 
         char last_byte_str[9] = {0};  // Un byte más el terminador nulo
-        strncpy(last_byte_str, bits + full_bytes * 8, remaining_bits);
-        //printf("last byte str %s\n", last_byte_str);
+        strncpy(last_byte_str, bits + required_bytes * 8, remaining_bits);
+        //printf("last byte str %s,  len: %ld\n", last_byte_str, strlen(last_byte_str));
+
+        /*for (size_t i = remaining_bits; i < 8; i++)
+        {
+            last_byte_str[i]='0';
+        }
+        last_byte_str[9] = '\0';*/
+        //printf("last byte str %s,  len: %ld\n", last_byte_str, strlen(last_byte_str));
+
+        
         uint8_t last_byte = bits_to_byte(last_byte_str);
+
         fwrite(&last_byte, sizeof(uint8_t), 1, file);
     }
+}
+
+char* get_char_as_string(const char *str, int *index) {
+    char c = str[*index];
+    int length = 1;
+    //print_binary(c, 8);
+    if ((c & 0x80) == 0x00) {
+        length = 1; // 1 byte UTF-8 (ASCII)
+    } else if ((c & 0xE0) == 0xC0) {
+        length = 2; // 2 bytes
+    } else if ((c & 0xF0) == 0xE0) {
+        length = 3; // 3 bytes
+    } else if ((c & 0xF8) == 0xF0) {
+        length = 4; // 4 bytes
+    }
+
+    char* utf8_char = (char*)ktmalloc(length + 1);
+
+    for (int i = 0; i < length; i++) {
+        utf8_char[i] = str[*index + i];
+    }
+    utf8_char[length] = '\0';
+
+    *index += length;
+    return utf8_char;
 }

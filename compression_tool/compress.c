@@ -7,30 +7,6 @@
 #include "heap_priority_queue.h"
 #include "binary_utils.h"
 
-char* get_char_as_string(const char *str, int *index) {
-    char c = str[*index];
-    int length = 1;
-    //print_binary(c, 8);
-    if ((c & 0x80) == 0x00) {
-        length = 1; // 1 byte UTF-8 (ASCII)
-    } else if ((c & 0xE0) == 0xC0) {
-        length = 2; // 2 bytes
-    } else if ((c & 0xF0) == 0xE0) {
-        length = 3; // 3 bytes
-    } else if ((c & 0xF8) == 0xF0) {
-        length = 4; // 4 bytes
-    }
-
-    char* utf8_char = (char*)ktmalloc(length + 1);
-
-    for (int i = 0; i < length; i++) {
-        utf8_char[i] = str[*index + i];
-    }
-    utf8_char[length] = '\0';
-
-    *index += length;
-    return utf8_char;
-}
 
 /**
  * calcula la tabla de frencuencias (nada más) y retorna un hash table con esa
@@ -50,7 +26,7 @@ char* calculate_frequencies_table_with_hash_table(hash_table_t *hash_table, cons
     size_t file_size = ftell(file);
     rewind(file);
 
-    char *content = ktmalloc(file_size);
+    char *content = ktmalloc(file_size+1);
     char *char_as_string = NULL;
 
     size_t bytes_read;
@@ -58,6 +34,7 @@ char* calculate_frequencies_table_with_hash_table(hash_table_t *hash_table, cons
 
     while ((bytes_read = fread(content, 1, file_size, file)) > 0) {
         int i = 0;
+        content[file_size] = '\0';
         while (i < bytes_read) {
             char_as_string = get_char_as_string(content, &i);
             insert(hash_table, char_as_string);
@@ -65,7 +42,7 @@ char* calculate_frequencies_table_with_hash_table(hash_table_t *hash_table, cons
             ktfree(char_as_string);
         }
     }
-    *count_characters = (int)hash_table->size;
+    //*count_characters = (int)hash_table->size;
     printf("\ncount_characters %d, - %ld\n", *count_characters, hash_table->size);
 
     printf("Frequencies table\n");
@@ -232,7 +209,7 @@ void build_prefix_code_table(binary_heap_pq_t *heap, kthash_table_t *prefix_code
 }
 
 // FUNCTIONS TO WRITE DATA COMPRESSED
-void write_headers_in_compressed_file(kthash_table_t *prefix_code_table, const char *output_filename, unsigned int count_characters){
+void write_headers_in_compressed_file(kthash_table_t *prefix_code_table, const char *output_filename, int padding){
     FILE *output = fopen(output_filename, "wb");
 
     if (!output) {
@@ -241,8 +218,9 @@ void write_headers_in_compressed_file(kthash_table_t *prefix_code_table, const c
     }
     // Escribir el tamaño de la tabla de prefijos
     printf("tabla size: %ld, sizeof: %zu\n", prefix_code_table->size, sizeof(prefix_code_table->size));
-    printf("count_characters size of: %zu\n", sizeof(count_characters));
-    fwrite(&prefix_code_table->size, sizeof(uint8_t), 1, output);
+    //printf("count_characters size of: %zu\n", sizeof(count_characters));
+    fwrite(&prefix_code_table->size, sizeof(uint8_t), 1, output); //save numbers of "characters"
+    fwrite(&padding, sizeof(uint8_t), 1, output); //padding right
 
     // Escribir cada prefijo en el encabezado
     for (size_t i = 0; i < prefix_code_table->size; i++) {
@@ -280,13 +258,6 @@ void write_headers_in_compressed_file(kthash_table_t *prefix_code_table, const c
 
 void write_data_encoded_in_compressed_file(const char *content, const char *output_file_path, kthash_table_t *prefix_code_table){
 
-    FILE *output_file = fopen(output_file_path, "ab");
-    if (!output_file) {
-        perror("Error al abrir el archivo");
-        exit(EXIT_FAILURE);
-
-    }
-
     printf("---------- INICIA ESCRITURA DE DATA COMPRIMIDA---------\n");
     //recorrer el archivo plano y sacar los caracteres y buscarlos en la hashtable
     // TODO: (función hash para optimizar busqueda)
@@ -295,10 +266,10 @@ void write_data_encoded_in_compressed_file(const char *content, const char *outp
     size_t file_size = strlen(content);
     size_t max_bits_len = prefix_code_table->max_bits_len;
     printf("#######################\n");
-    printf("file size: %ld\n", file_size);
+    printf("file size: %ld, mbl = [%ld]\n", file_size, max_bits_len);
 
     char *char_as_string;
-    char *compress_data = ktmalloc(max_bits_len);
+    char *compress_data = ktmalloc(max_bits_len+1);
     int writter_index = 0;
 
     int index = 0;
@@ -313,13 +284,25 @@ void write_data_encoded_in_compressed_file(const char *content, const char *outp
             compress_data[writter_index] = found->bits[i];
             writter_index++;
         }
-
         //concatenate_bits2(&compress_data, found->bits);
         //strcat(compress_data, found->bits);
         //printf("compress_data %s | wi = %d\n", compress_data, writter_index);
         ktfree(char_as_string);
-
     }
+
+    compress_data[max_bits_len] = '\0';
+    printf("compressed data: %s\n", compress_data);
+
+    //write headers
+    int padding = strlen(compress_data) % 8;
+    write_headers_in_compressed_file(prefix_code_table, output_file_path, padding);
+
+    FILE *output_file = fopen(output_file_path, "ab");
+    if (!output_file) {
+        perror("Error al abrir el archivo");
+        exit(EXIT_FAILURE);
+    }
+
     //TODO: optimizar el write_bits, pero para optimizarlo necesito la cadena de caracteres
     write_bits(output_file, compress_data);
 

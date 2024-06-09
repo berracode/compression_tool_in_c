@@ -5,6 +5,7 @@
 #include <time.h>
 
 #include "compress.h"
+#include "decompress.h"
 #include "binary_utils.h"
 #include "kthash_table.h"
 #include "ktmem.h"
@@ -40,14 +41,12 @@ void compress_file(char *file_path, char *dst_file_path) {
     char *content = calculate_frequencies_table_with_hash_table(hash_table, file_path, &count_characters);
     create_huffman_tree(heap, hash_table); //incluido build_tree();
 
-    printf("---------- STARTING PREFIX HASH_TABLE with: %d---------\n", count_characters);
+    printf("---------- STARTING PREFIX HASH_TABLE with: %ld---------\n", hash_table->size);
 
-    prefix_code_table = create_prefix_table(count_characters);
+    prefix_code_table = create_prefix_table(hash_table->size);
     build_prefix_code_table(heap, prefix_code_table);
 
     print_prefix_table(prefix_code_table);
-
-    write_headers_in_compressed_file(prefix_code_table, dst_file_path, count_characters);
 
     // TODO: escribir data del archivo plano en archivo de salida. MUY LENTO AÚN
     write_data_encoded_in_compressed_file(content, dst_file_path, prefix_code_table);
@@ -63,7 +62,12 @@ void compress_file(char *file_path, char *dst_file_path) {
     free_binary_heap_pq(heap);
 
     printf("End by happy path\n");
+}
 
+void decompress_file(char *compressed_file, char *decompressed_file){
+    read_headers_from_compressed_file(compressed_file);
+
+    printf("End by happy path\n");
 
 }
 
@@ -85,7 +89,7 @@ int main(int argc, char *argv[]) {
     if(strcmp(command, "compress")==0){
         compress_file(file_path, dst_file_path);
     } else if (strcmp(command, "decompress")==0){
-        printf("Not implemented yet\n");
+        decompress_file(file_path, dst_file_path);
     } else {
         help(argv[0]);
     }

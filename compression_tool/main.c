@@ -65,9 +65,12 @@ void compress_file(char *file_path, char *dst_file_path) {
 }
 
 void decompress_file(char *compressed_file, char *decompressed_file){
-    read_headers_from_compressed_file(compressed_file);
+    read_headers_from_compressed_file(compressed_file, decompressed_file, &prefix_code_table);
+    //print_prefix_table(prefix_code_table);
 
-    printf("End by happy path\n");
+    free_prefix_table(prefix_code_table);
+
+     printf("End by happy path\n");
 
 }
 

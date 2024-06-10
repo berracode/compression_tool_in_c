@@ -52,7 +52,7 @@ ktprefix_code_t* find_prefix_code(kthash_table_t *table, const char *character) 
 void insert_prefix_code(kthash_table_t *table, char *character, int frequency, char *bits) {
     if(character != NULL && bits != NULL){
         unsigned int index= hash_function(table->capacity, character);
-        printf("INDEX HT %d\n", index);
+        //printf("INDEX HT %d\n", index);
 
         ktprefix_code_t *new_node = (ktprefix_code_t *)ktmalloc(sizeof(ktprefix_code_t));
         new_node->character = (char*)ktmalloc(strlen(character) + 1);
@@ -118,7 +118,7 @@ void print_prefix_table(const kthash_table_t *table) {
         ktprefix_code_t *current = table->prefix_codes[i];
         if(current != NULL) {
             while (current != NULL){
-                printf("Bucket %ld: %s\n", i, current->character);
+                printf("Bucket: %ld [%s, %s]\n", i, current->character, current->bits);
                 current = current->next;
             }
             

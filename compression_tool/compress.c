@@ -291,7 +291,7 @@ void write_data_encoded_in_compressed_file(const char *content, const char *outp
     }
 
     compress_data[max_bits_len] = '\0';
-    printf("compressed data: %s\n", compress_data);
+    //printf("compressed data: %s\n", compress_data);
 
     //write headers
     int padding = strlen(compress_data) % 8;

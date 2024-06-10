@@ -33,35 +33,19 @@ void compress_file(char *file_path, char *dst_file_path) {
     heap = create_binary_heap_pq();
     hash_table = create_table();
 
-
-    struct timespec start, end;
-
-    clock_gettime(CLOCK_MONOTONIC, &start);
-
     char *content = calculate_frequencies_table_with_hash_table(hash_table, file_path, &count_characters);
-    create_huffman_tree(heap, hash_table); //incluido build_tree();
-
-    printf("---------- STARTING PREFIX HASH_TABLE with: %ld---------\n", hash_table->size);
+    create_huffman_tree(heap, hash_table);
 
     prefix_code_table = create_prefix_table(hash_table->size);
     build_prefix_code_table(heap, prefix_code_table);
-
-    print_prefix_table(prefix_code_table);
-
-    // TODO: escribir data del archivo plano en archivo de salida. MUY LENTO AÚN
     write_data_encoded_in_compressed_file(content, dst_file_path, prefix_code_table);
-
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    double elapsed_time = (end.tv_sec - start.tv_sec) +
-                          (end.tv_nsec - start.tv_nsec) / 1e9;
-    printf("Tiempo transcurrido: %f segundos con hash table, pq, huffman_tree, prefix_code table\n", elapsed_time);
 
     ktfree(content);
     free_prefix_table(prefix_code_table);
     free_table(hash_table);
     free_binary_heap_pq(heap);
 
-    printf("End by happy path\n");
+    printf("End by happy path :D\n");
 }
 
 void decompress_file(char *compressed_file, char *decompressed_file){

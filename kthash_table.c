@@ -8,8 +8,6 @@
 kthash_table_t* create_prefix_table(size_t initial_capacity) {
     kthash_table_t *table = (kthash_table_t *)ktmalloc(sizeof(kthash_table_t));
     if (!table) return NULL;
-
-    printf("size hash table %zu\n", initial_capacity);
     table->prefix_codes = (ktprefix_code_t **)calloc(initial_capacity , sizeof(ktprefix_code_t *));
     if (!table->prefix_codes) {
         ktfree(table);
